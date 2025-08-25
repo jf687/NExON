@@ -15,3 +15,7 @@ Imports:
     Matrix,
     matrixcalc,
     network
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
