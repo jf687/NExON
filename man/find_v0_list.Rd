@@ -4,11 +4,28 @@
 \alias{find_v0_list}
 \title{find_v0_list()}
 \usage{
-find_v0_list(Ys, gamma = 0.35, plot_ = FALSE)
+find_v0_list(
+  Ys,
+  gamma = 0.5,
+  v0_range = 10^seq(log10(0.02), log10(0.2), length.out = 30),
+  plot_ = FALSE
+)
 }
 \arguments{
-\item{Ys}{}
+\item{Ys}{List of data matrices for which network estimation is wanted.}
+
+\item{gamma}{The tuning parameter for the extended Bayesian information criteria. Can be set between 0 and 1 inclusive.}
+
+\item{v0_range}{List of values of $\nu_0$ on which a line search is performed to find the optimal for each network estimation. Default \code{10^seq(log10(0.02), log10(0.2), length.out = 30)}.}
+
+\item{plot_}{If set to TRUE, function will show plots of v0 against eBIC. Default FALSE.}
+}
+\value{
+List of optimal v0 values
 }
 \description{
-find_v0_list()
+Finds optimal estimates for the spike variance by minimising the extended Bayesian information criteria for estimates made by the vanilla single estimation model (SSL).
+}
+\examples{
+.
 }

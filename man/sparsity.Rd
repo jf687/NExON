@@ -15,3 +15,7 @@ Sparsity calculation of the inputted matrix
 \description{
 Calculates the sparsity of a matrix
 }
+\examples{
+m <- matrix(sample(0:1, 25, replace=TRUE), nrow=5)
+sparsity(m)
+}

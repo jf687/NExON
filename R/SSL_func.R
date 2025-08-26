@@ -1,19 +1,7 @@
-#' Title
+#' Internal Helper Function
 #'
-#' @param Y
-#' @param list_hyper
-#' @param tol
-#' @param maxit
-#' @param verbose
-#' @param anneal
-#' @param track_q
-#' @param track_vb_elbo
-#' @param set_v0
-#'
-#' @return
-#' @export
-#'
-#' @examples
+#' @noRd
+#' @keywords internal
 SSL  <- function(Y,
                 list_hyper,
                 tol = 1e-3,

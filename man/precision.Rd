@@ -15,3 +15,6 @@ The precision corresponding to the confusion matrix.
 \description{
 Makes a calculation for precision based on the confusion matrix entries (TP/(TP+FP))
 }
+\examples{
+.
+}

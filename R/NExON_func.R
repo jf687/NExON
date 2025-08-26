@@ -14,7 +14,7 @@
 #' @export
 #'
 #' @examples
-NExON <- function(Ys,
+NExON.Bayes <- function(Ys,
                   ts =NULL,
                   list_hyper = NULL,
                   list_init = NULL,

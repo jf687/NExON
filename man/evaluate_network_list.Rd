@@ -2,13 +2,23 @@
 % Please edit documentation in R/performance_metrics.R
 \name{evaluate_network_list}
 \alias{evaluate_network_list}
-\title{Title}
+\title{evaluate_network_list}
 \usage{
 evaluate_network_list(true_networks, estimated_networks)
 }
 \arguments{
-\item{t}{}
+\item{true_networks}{List of matrices containing the true (simulated) networks.}
+
+\item{estimated_networks}{List of matrices containing the estimated networks.}
+}
+\value{
+\if{html}{\out{<div class="sourceCode">}}\preformatted{$true_positives, $true_negatives, $false_positives, $false_negatives, $conf.mat
+}\if{html}{\out{</div>}}
 }
 \description{
-Title
+Calculates the overall number of true positives, true negatives, false positives and false negatives attained
+by the network estimations and compiles into confusion matrix form
+}
+\examples{
+.
 }

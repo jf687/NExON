@@ -16,14 +16,15 @@ hormonal treatment) as covariate information will account for the
 inherent heterogeneity of the networks and can lead to new insights in
 the behaviours of biomolecular pathways.
 
-`NExON` (the function that implements NExON-Bayes) takes a list of data
-matrices, each with varying numbers of multivariate samples containing
-*P* variables. NExON-Bayes is a Gaussian graphical model, and so each
-sample is assumed to have been drawn from a normal distribution. Samples
-within the same data matrix, and thus described by the same ordinal
-covariate, are assumed to have been drawn from the same normal
-distribution, and a precision matrix (network) estimate corresponding to
-each data matrix is made and returned by the function.
+The main function of the package, `NExON::NExON.Bayes` (the function
+that implements NExON-Bayes), takes a list of data matrices, each with
+varying numbers of multivariate samples containing *P* variables.
+NExON-Bayes is a Gaussian graphical model, and so each sample is assumed
+to have been drawn from a normal distribution. Samples within the same
+data matrix, and thus described by the same ordinal covariate, are
+assumed to have been drawn from the same normal distribution, and a
+precision matrix (network) estimate corresponding to each data matrix is
+made and returned by the function.
 
 Functions for variable selection, simulating appropriate data and
 plotting networks are also implemented in this package.
@@ -37,13 +38,6 @@ following into the RStudio console:
 remotes::install_github("jf687/NExON", dependencies = TRUE)
 ```
 
-To build and view the vignette locally (recommended), use
-
-``` r
-remotes::install_github("jf687/NExON", dependencies = TRUE, build_vignettes = TRUE)
-browseVignettes("NExON")
-```
-
 ## Example
 
 ### Simulating a test dataset
@@ -54,59 +48,61 @@ proportional to the ordinal covariate, with half of these specified
 entries being positively proportional (“appearing edges”) and half being
 negatively proportional (“disappearing edges”). The function ensures
 that all matrices are positive definite by recursively calling itself
-until positive definiteness is achieved.
+until positive definiteness is achieved. The function also generates
+zero-mean multivariate normally distributed data, where the inverse of
+the generated precision matrices are used as the distributions’
+covariance matrices.
 
-For speed of use, the function will print the seed for which positive
-definiteness is achieved with given arguments, so that the user can use
-this seed as an input argument in the future if needed. The function
-also generates zero-mean multivariate normally distributed data, where
-the inverse of the generated precision matrices are used as the
-distributions’ covariance matrices.
-
-For this test dataset, we will generate 4 (`Cn=4`) networks with 50
-variables (`P=50`). We then set 40% of the edges to have linear
+For this test dataset, we generate 4 networks (`A=4`) with 50 variables
+(`P=50`). We then set 40% of the initial edges to have linear
 correlation with the covariate (`frac_change = 0.4`). The input
-`Ns_sample` is a list from which the number of samples for each data
-matrix is randomly selected.
+`Ns_sample` relates to data generation, and is a list from which the
+number of samples for each data matrix is randomly selected.
+`network_seed` and `data_seed` can be used to ensure reproducibility.
+`network_seed` sets a seed at the point of generating the networks,
+whilst `data_seed` sets a seed at the point of generating data. To
+generate several sets of data from the same precision matrices, keep
+`network_seed` constant and change `data_seed`.
 
 ``` r
 # generate simulated networks and data
-sim_data <- NExON::create_Cn_networks(P = 50, Cn = 4, seed_1 = 123, seed_2 = 123, frac_change = 0.4, Ns_sample = c(150, 150, 150))
-#> seed that works for P = 50 , frac = 0.4  :  252
+sim_data <- NExON::simulate_networks(P = 50, A = 4, network_seed = 123, data_seed = 123, frac_change = 0.4, Ns_sample = c(150, 150, 150))
+#> Solution found with network_seed =  252
 ```
 
 The function can take time to find a positive definite solution. Pay
 attention to the printed output, which tells us that the positive
-definite solution is found with seed 252. It’s useful to change the seed
-input to save time if the function is run again
+definite solution is found with `network_seed = 252`. It’s useful to
+change the seed input to save time if the function is run again:
 
 ``` r
-sim_data <- NExON::create_Cn_networks(P = 50, Cn = 4, seed_1 = 252, seed_2 = 123, frac_change = 0.4, Ns_sample = c(150, 150, 150))
-#> seed that works for P = 50 , frac = 0.4  :  252
+sim_data <- NExON::simulate_networks(P = 50, A = 4, network_seed = 252, data_seed = 123, frac_change = 0.4, Ns_sample = c(150, 150, 150))
+#> Solution found with network_seed =  252
 ```
 
-To visualise the generated networks, we plot them. The
-`NExON::create_layout( )` function takes a network matrix as its input
-and outputs the coordinates of a layout, using the Fruchterman–Reingold
-force-directed layout algorithm which gives a balanced, spaced layout.
-This is done using functionality from the `networks` R package (Butts
-(2008)). The function `NExON::create_network_plots()` will then plot
-multiple networks (with the same layout). Its first input is a list of
-networks (represented by matrices) and the second is the `layout_coords`
-that are generated by the `NExON::create_layout()` function.
+To visualise the generated networks, we plot them using the
+`NExON::create_network_plots()` function. Before doing so, we create a
+graphical layout for the networks using the `NExON::create_layout( )`
+function, which takes a network matrix as its input and outputs the
+coordinates of a layout, using the Fruchterman–Reingold force-directed
+layout algorithm which gives a balanced, spaced layout. This is done
+using functionality from the `networks` R package (Butts (2008)). The
+function `NExON::create_network_plots()` will then plot multiple
+networks (with the same layout). Its first input is a list of networks
+(represented by matrices) and the second is the `layout_coords` that are
+generated by the `NExON::create_layout()` function.
 
 For this example, we optimise the layout for the first network (of four)
-by parsing the argument `sim_data$As[[1]]`. Note that `sim_data$As` are
-the networks that correspond to the generated precision matrices
-(`sim_data$Omegas`), where non-zero values are simply represented with a
-`1` and zero values with `0`. To plot these networks, the list of
-matrices `sim_data$As` is parsed along with the `layout_coords` into the
-`NExON::create_network_plots()` function.
+by parsing the argument `sim_data$As[[1]]` into
+`NExON::create_layout( )`. To plot these networks, the list of matrices
+`sim_data$As` is parsed along with the `layout_coords` into the
+`NExON::create_network_plots()` function. Importantly, `sim_data$As` is
+a lsit of networks and not precision matrices (i.e. thresholding has
+been performed on the precision matrices to produce matrices).
 
 ``` r
-# plot the true networks
 layout <- NExON::create_layout(sim_data$As[[1]])
-NExON::create_network_plots(sim_data$As, layout_coords = layout)
+NExON::create_network_plots(sim_data$As, layout_coords = layout, title = "Simulated (true) Networks")
 ```
 
 <img src="man/figures/README-sim_data3-1.png" width="100%" />
@@ -126,7 +122,7 @@ and will select spike variances that optimise the estimations made by
 the vanilla, single-network estimation model for each precision matrix,
 based on the extended Bayesian information criteria. The function also
 requires a sparsity control parameter, `gamma`, which takes a default
-value of `0.5`. For this example, we use `gamma <- 0.35`. The function
+value of `0.5`. For this example, we use `gamma = 0.35`. The function
 outputs a list of $\nu_0$ values that can is used as an argument in the
 main network estimation function.
 
@@ -135,22 +131,19 @@ main network estimation function.
 v0_list <- NExON::find_v0_list(sim_data$Ys, gamma = 0.35, plot_ = FALSE)
 ```
 
-\#\<- c(0.02,0.02,0.02,0.02) \#NExON::find_v0_list(sim_data\$Ys,gamma =
-0.35, plot\_ = FALSE)
-
 ### Performing network estimation
 
 To perform joint network estimation, the main function of the package,
-`NExON::NExON()`, is used. This function takes a list of data matrices
-(in this case `sim_data$Ys`) and a list of selected $\nu_0$s as
+`NExON::NExON.Bayes()`, is used. This function takes a list of data
+matrices (in this case `sim_data$Ys`) and a list of selected $\nu_0$s as
 arguments (`v0_list`). The lists must be the same length.
 
 ``` r
-results <- NExON::NExON(sim_data$Ys, v0_list = v0_list)
-#> Algorithm runtime:  13.25799 secs
+results <- NExON::NExON.Bayes(sim_data$Ys, v0_list = v0_list)
+#> Algorithm runtime:  5.69061 secs
 ```
 
-`NExON::NExON()` has several important outputs. Specifically:
+`NExON::NExON.Bayes()` has several important outputs. Specifically:
 
 - `$estimates..`
   - `..$Omegas` provides a list of the estimated precision matrices.
@@ -164,11 +157,11 @@ a threshold, use:
 estimated_networks <- lapply(results$estimates$m_deltas, function(x) abs(x) > 0.5)
 ```
 
-The estimated networks can be plotted the same layout as the true
+The estimated networks can be plotted with the same layout as the true
 network plots by using the same `layout` argument as before
 
 ``` r
-NExON::create_network_plots(estimated_networks, layout_coords = layout)
+NExON::create_network_plots(estimated_networks, layout_coords = layout, title = "Estimated Networks")
 ```
 
 <img src="man/figures/README-est_plots-1.png" width="100%" />
@@ -184,14 +177,15 @@ NExON::create_network_plots(estimated_networks, layout_coords = layout)
 ### Performance Evaluation
 
 To evaulate the performance of the estimations on the simulated data, we
-focus on precision and recall. `NExON::evaluate_network_list()` will
-calculate a confusion matrix, which is then parsed through the
-`precision()` and `recall()` functions to obtain precision and recall
-values.
-
-The function `NExON::evaluate_network_list()` takes two lists of
-matrices as its arguments. The first contains the true (simulated)
-networks and the second contains the estimated networks.
+focus on precision and recall. The function
+`NExON::evaluate_network_list()` takes two lists of matrices as its
+arguments: the first contains the true (simulated) networks and the
+second contains the estimated networks. The function will calculate and
+output a confusion matrix (`..$conf.mat`) containing the total number of
+true positives, false negatives, false positives and true negatives
+across all estimations. This confusion matrix is then parsed through the
+`precision()` and `recall()` functions to obtain overall precision and
+recall values.
 
 ``` r
 conf.mat <- NExON::evaluate_network_list(sim_data$As, estimated_networks)$conf.mat

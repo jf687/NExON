@@ -1,5 +1,5 @@
 
-#' @title create_Cn_networks()
+#' @title simulate_networks()
 #'
 #' @description
 #'  Implements an algorithm that generates symmetric positive definite precision matrices, where a fraction of entries are (linearly)
@@ -7,34 +7,39 @@
 #'  using the inverses of the precision matrices it generates, which can be used in simulations.
 #'
 #' @param P The number of variables in the networks. i.e. PxP precision matrices are generated.
-#' @param Cn The number of precision matrices (/adjacency matrices) that you want to generate.
-#' @param seed_1 Sets the seed for the random generation of the initial, scale-free precision matrix.
-#'  This seed will iteratively increase by 1 until positive definite solutions are found. The final seed is stored in output and printed to speed up future function usages.
-#' @param seed_2 Sets the seed for data generation
-#' @param frac_change The fraction of non-zero entries to the first precision matrix that will disappear, equal to the number that will appear.
+#' @param A The number of precision matrices (/adjacency matrices) that you want to generate.
+#' @param network_seed Sets the seed for the random generation of the initial, scale-free precision matrix.
+#'  This seed will recursively increase by 1 until positive definite solutions are found. The final seed is stored
+#'  in output and printed to help speed up future function usages.
+#' @param data_seed Sets the seed for data generation. To generate several sets of data from the same precision matrices, keep `network_seed`
+#'  constant and change `data_seed`.
+#' @param frac_change The fraction of non-zero entries of the first precision matrix that will have negative correlation with the covariate
+#'  the number of which is equal to the number that will appear. I.e. if the network has 100 edges and `frac_change = 0.2`, 20 edges will have
+#'  negative correlation and 20 will have positive correlation.
 #' @param Ns_sample For data generation, the set from which the number of samples taken using each precision matrix will be randomly drawn from.
+#'
 #'
 #' @return
 #' - $Omegas : The set of precision matrices.
-#' - $Ys : The corresponding simulated data.
+#' - $Ys : List of simulated data matrices.
 #' - $Ns : The number of drawn samples for each network.
 #' - $neg_id : The indices of disappearing edges.
 #' - $pos_id : The indices of appearing edges.
-#' - $As : The adjacency matrices correspoding to the precision matrices.
+#' - $As : The adjacency matrices corresponding to the precision matrices.
 #' @export
 #'
-#' @examples create_Cn_networks()
-#' @examples create_Cn_networks(P = 100, Cn = 4, frac_change = 0.4)
+#' @examples simulate_networks()
+#' @examples simulate_networks(P = 100, A = 4, frac_change = 0.4)
 
-create_Cn_networks <- function(P = 50, Cn = 3, seed_1 = 123, seed_2 = 123,
+simulate_networks <- function(P = 50, A = 3, network_seed = 123, data_seed = 123,
                                frac_change = 0.2, Ns_sample = c(150,150,150)){
 
 
 
-  set.seed(seed_1)
+  set.seed(network_seed)
 
   # Sample sizes for each dataset
-  Ns <- sample(Ns_sample, Cn, replace = T)
+  Ns <- sample(Ns_sample, A, replace = T)
 
   #generate an initial network
   net0 <- huge::huge.generator(n = Ns[1], d = P, graph = 'scale-free', v = 0.4, u = 0.05, verbose = F)
@@ -48,7 +53,7 @@ create_Cn_networks <- function(P = 50, Cn = 3, seed_1 = 123, seed_2 = 123,
   net0$omega <- net0$omega * pol
 
   # Replicating the initial precision matrix.
-  Omegas <- replicate(Cn, net0$omega, simplify=FALSE)
+  Omegas <- replicate(A, net0$omega, simplify=FALSE)
 
   # Assert which vertices have an edge (edge_id) between them and which don't (non_edge_id)
   edge_id <- which(as.logical(net0$theta)  & upper.tri(net0$omega), arr.ind = T)
@@ -69,20 +74,20 @@ create_Cn_networks <- function(P = 50, Cn = 3, seed_1 = 123, seed_2 = 123,
   # Iterate over each disappearing edge and have them 'fade' out linearly
   for (i in 1:nneg) {
     val <- net0$omega[neg_id[i,1],neg_id[i,2]]
-    #k <- sample(2:Cn, 1, replace = T)
-    for (t in 2:Cn) {
-      Omegas[[t]][neg_id[i,1],neg_id[i,2]] <- Omegas[[t]][neg_id[i,2],neg_id[i,1]] <- ((Cn-t)/(Cn-1))*val
+    #k <- sample(2:A, 1, replace = T)
+    for (t in 2:A) {
+      Omegas[[t]][neg_id[i,1],neg_id[i,2]] <- Omegas[[t]][neg_id[i,2],neg_id[i,1]] <- ((A-t)/(A-1))*val
     }
   }
 
   # Iterate over each appearing edge and have them 'fade' in linearly
   hi_val <- max(abs(net0$omega[lower.tri(net0$omega)]))
   for (i in 1:npos) {
-    #k <- sample(2:Cn, 1, replace = T)
+    #k <- sample(2:A, 1, replace = T)
     val <- hi_val - sample(c(0,0.02,0.04,0.06,0.08,0.1), 1, replace = T)
     plus_min <- sample(c(-1,1),1,replace = T)
-    for (t in 2:Cn) {
-      Omegas[[t]][pos_id[i,1],pos_id[i,2]] <- Omegas[[t]][pos_id[i,2],pos_id[i,1]] <- plus_min*val*(t-1)/(Cn-1)
+    for (t in 2:A) {
+      Omegas[[t]][pos_id[i,1],pos_id[i,2]] <- Omegas[[t]][pos_id[i,2],pos_id[i,1]] <- plus_min*val*(t-1)/(A-1)
     }
   }
 
@@ -94,14 +99,14 @@ create_Cn_networks <- function(P = 50, Cn = 3, seed_1 = 123, seed_2 = 123,
   }
   for(i in seq_along(Omegas)){
     while(!matrixcalc::is.positive.definite(Omegas[[i]])){
-      nets <- create_Cn_networks(P = P, Cn = Cn, seed_1 = seed_1 + 1, seed_2 = 123,
+      nets <- simulate_networks(P = P, A = A, network_seed = network_seed + 1, data_seed = data_seed,
                                  frac_change = frac_change)
       return(nets)
     }
   }
-  set.seed(seed_2)
+  set.seed(data_seed)
 
-  for(y in 1:Cn){
+  for(y in 1:A){
 
     Ys[[y]] <- MASS::mvrnorm(n=Ns[y], mu = rep(0,P), Sigma = solve(Omegas[[y]]))
     Ys[[y]] <- scale(Ys[[y]])
@@ -111,10 +116,10 @@ create_Cn_networks <- function(P = 50, Cn = 3, seed_1 = 123, seed_2 = 123,
 
   As <- lapply(Omegas, function(omega) (abs(omega) > 0) * 1)
 
-  cat("seed that works for P =",P,", frac =",frac_change," : ",seed_1,"\n")
+  cat("Solution found with network_seed = ",network_seed,"\n")
 
   return(list(Omegas = Omegas, Ys = Ys, Ns = Ns, neg_id = neg_id, As = As,
-              net0_sig = net0$sigma, pos_id = pos_id, seed_1 = seed_1, edge_id = edge_id))
+              net0_sig = net0$sigma, pos_id = pos_id, network_seed = network_seed, edge_id = edge_id))
 
 }
 

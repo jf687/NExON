@@ -1,13 +1,7 @@
-#' Title
+#' Internal Helper Function
 #'
-#' @param true_network
-#' @param estimated_network
-#' @param t
-#'
-#' @return
-#' @export
-#'
-#' @examples
+#' @noRd
+#' @keywords internal
 evaluate_network <- function(true_network, estimated_network,t=1e-9) {
   if (!all(dim(true_network) == dim(estimated_network))) {
     stop("The dimensions of the true network and the estimated network must match.")
@@ -33,16 +27,20 @@ evaluate_network <- function(true_network, estimated_network,t=1e-9) {
 ## 'evaluate_network_list' takes multiple true and estimated networks and returns the confusion matrix components
 ## It also returns the confusion matrix in itself, and 'P' which is the dimension of the networks that it is calculating.
 
-#' Title
+#' @title evaluate_network_list
 #'
-#' @param true_networks
-#' @param estimated_networks
-#' @param t
+#' @description
+#' Calculates the overall number of true positives, true negatives, false positives and false negatives attained
+#'  by the network estimations and compiles into confusion matrix form
 #'
-#' @return
+#'
+#' @param true_networks List of matrices containing the true (simulated) networks.
+#' @param estimated_networks List of matrices containing the estimated networks.
+#'
+#' @return     $true_positives, $true_negatives, $false_positives, $false_negatives, $conf.mat
 #' @export
 #'
-#' @examples
+#' @examples .
 evaluate_network_list <- function(true_networks, estimated_networks) {
   # Ensure both lists have the same length
   if (length(true_networks) != length(estimated_networks)) {
@@ -81,9 +79,6 @@ evaluate_network_list <- function(true_networks, estimated_networks) {
   )
 }
 
-## 'precision' gives the precision of estimations based on a confusion matrix.
-## precision = TN/(TN + )
-
 #' @title recall()
 #'
 #' @description Makes a calculation for precision based on the confusion matrix entries (TP/(TP+FN))
@@ -93,7 +88,7 @@ evaluate_network_list <- function(true_networks, estimated_networks) {
 #' @return The recall corresponding to the confusion matrix.
 #' @export
 #'
-#' @examples
+#' @examples .
 recall = function (conf.mat) {
 
   if (conf.mat[1, 1] == 0 & conf.mat[2, 1] == 0) {
@@ -116,7 +111,7 @@ recall = function (conf.mat) {
 #' @return The precision corresponding to the confusion matrix.
 #' @export
 #'
-#' @examples
+#' @examples .
 precision = function (conf.mat) {
 
   if (conf.mat[1, 1] == 0 & conf.mat[2, 1] == 0) {
@@ -125,30 +120,6 @@ precision = function (conf.mat) {
   else {
     return(conf.mat[1, 1]/(conf.mat[1, 1] + conf.mat[2, 1]))
   }
-}
-
-
-#' @title DKL()
-#'
-#' @description
-#' Calculates the Kullbuck-Liebler divergence between the estimated and true precision matrices.
-#'
-#'
-#' @param Om.est Estimated precision/adjacency matrix
-#' @param Om.true True precision/adjacency matrix
-#'
-#' @return Kullbuck-Liebler divergence between the estimated and true precision matrices.
-#' @export
-#'
-#' @examples
-DKL <- function(Om.est, Om.true){
-  # if(dim(Om.est) == dim(Om.true)){
-  #   stop("Discrepant matrix dimensions.")
-  # }
-  om.om <- solve(Om.true) %*% Om.est
-  det.om.om <- determinant(om.om, logarithm = T)$modulus[[1]]
-  P <- ncol(Om.est)
-  return( sum(diag(om.om))- det.om.om - P )
 }
 
 #' @title sparsity()
@@ -163,6 +134,8 @@ DKL <- function(Om.est, Om.true){
 #' @export
 #'
 #' @examples
+#' m <- matrix(sample(0:1, 25, replace=TRUE), nrow=5)
+#' sparsity(m)
 sparsity <- function(network){
   return(sum(network[lower.tri(network)] != 0)/sum(lower.tri(network)))
 }

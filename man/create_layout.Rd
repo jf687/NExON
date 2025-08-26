@@ -7,7 +7,7 @@
 create_layout(network)
 }
 \arguments{
-\item{network}{The network w}
+\item{network}{Single matrix input of the network for which the layout will be optimised. Function is designed for a network, NOT a precision matrix.}
 }
 \value{
 Matrix array that gives the coordinates of each node. This should then be parsed as the layout_coords argument in create_network_plots().

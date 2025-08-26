@@ -2,10 +2,10 @@
 % Please edit documentation in R/plot_funcs.R
 \name{create_network_plots}
 \alias{create_network_plots}
-\title{Title}
+\title{create_network_plots}
 \usage{
 create_network_plots(
-  data_list,
+  net_list,
   layout_coords,
   color = "red",
   edge_color = "purple",
@@ -13,8 +13,28 @@ create_network_plots(
 )
 }
 \arguments{
-\item{title}{}
+\item{net_list}{list of matrices of networks to plot}
+
+\item{layout_coords}{Matrix array of coordinates which should have been generated using the function \code{create_layout}.}
+
+\item{color}{Set colour of the nodes.}
+
+\item{edge_color}{Set colour of the edges}
+
+\item{title}{Set the title of the plot.}
+}
+\value{
+Plots a 1xN array of networks, each with the same layout.
 }
 \description{
-Title
+create_network_plots
+}
+\examples{
+m <- matrix(sample(0:1, 25, replace=TRUE), nrow=5)
+m2 <- matrix(sample(0:1, 25, replace=TRUE), nrow=5)
+m3 <- matrix(sample(0:1, 25, replace=TRUE), nrow=5)
+m[lower.tri(m)] <- t(m)[lower.tri(m)]
+diag(m) <- 0
+layout <- create_layout(m)
+create_network_plots(list(m,m2,m3), layout_coords = layout)
 }
