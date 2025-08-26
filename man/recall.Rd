@@ -15,3 +15,6 @@ The recall corresponding to the confusion matrix.
 \description{
 Makes a calculation for precision based on the confusion matrix entries (TP/(TP+FN))
 }
+\examples{
+.
+}
